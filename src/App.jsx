@@ -3,11 +3,13 @@ import { fetchSeriesByDate, fetchSeriesByTeamNearDate, fetchSeriesState } from '
 import { parsePolymarketSlug, findBestMatch, matchScore } from './utils/matching.js'
 import SeriesResult from './components/SeriesResult.jsx'
 import SeriesPicker from './components/SeriesPicker.jsx'
+import BatchTab from './components/BatchTab.jsx'
 
 const MATCH_THRESHOLD = 60
 const TEAM_MATCH_THRESHOLD = 60
 
 export default function App() {
+  const [activeTab, setActiveTab] = useState('search')
   const [input, setInput] = useState('')
   const [team1Input, setTeam1Input] = useState('')
   const [team2Input, setTeam2Input] = useState('')
@@ -134,10 +136,10 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <div className="max-w-2xl mx-auto px-4 py-10">
+      <div className={`${activeTab === 'batch' ? 'max-w-[1400px]' : 'max-w-2xl'} mx-auto px-4 py-10 transition-all`}>
 
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <div className="flex items-center gap-3 mb-1">
             <div className="w-2 h-8 bg-blue-500 rounded-full" />
             <h1 className="text-2xl font-black tracking-tight">UMA Esports Verifier</h1>
@@ -146,6 +148,36 @@ export default function App() {
             Verify CS2 / Dota 2 match results using GRID.gg
           </p>
         </div>
+
+        {/* Tab navigation */}
+        <div className="flex gap-1 mb-6 bg-gray-800 rounded-lg p-1 w-fit border border-gray-700">
+          <button
+            onClick={() => setActiveTab('search')}
+            className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+              activeTab === 'search'
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-400 hover:text-gray-200'
+            }`}
+          >
+            Single Search
+          </button>
+          <button
+            onClick={() => setActiveTab('batch')}
+            className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+              activeTab === 'batch'
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-400 hover:text-gray-200'
+            }`}
+          >
+            Batch CSV
+          </button>
+        </div>
+
+        {/* Batch tab */}
+        {activeTab === 'batch' && <BatchTab />}
+
+        {/* Search tab */}
+        {activeTab === 'search' && <>
 
         {/* Search form */}
         <form onSubmit={handleSearch} className="space-y-3">
@@ -236,6 +268,8 @@ export default function App() {
         {status === 'done' && seriesState && selectedSeries && (
           <SeriesResult series={selectedSeries} state={seriesState} />
         )}
+
+        </>}
 
       </div>
     </div>
