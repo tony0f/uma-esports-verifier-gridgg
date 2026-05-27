@@ -79,7 +79,7 @@ function escapeCsvField(v) {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const MATCH_THRESHOLD = 60
+const MATCH_THRESHOLD = 50  // lower than single-search (60) — full names from event_title are reliable
 const DATE_DELAY_MS  = 1500  // pause before each new date query (rate-limit protection)
 const STATE_DELAY_MS = 1000  // pause before each new series-state query
 

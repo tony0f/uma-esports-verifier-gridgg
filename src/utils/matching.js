@@ -1,20 +1,28 @@
 const DIGIT_WORDS = { '0':'zero','1':'one','2':'two','3':'three','4':'four','5':'five','6':'six','7':'seven','8':'eight','9':'nine' }
 
 function normalize(str) {
-  return str.toLowerCase().replace(/[^a-z0-9]/g, '')
+  // NFD splits accented chars into base letter + combining mark:
+  //   "ê" -> "e" + U+0302,  "ç" -> "c" + U+0327,  "Ã" -> "A" + U+0303
+  // We then strip the combining diacritical marks block (U+0300-U+036F)
+  // so "QUINTESSÊNCIA" -> "quintessencia" and matches GRID's unaccented form.
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]/g, '')
 }
 
-// "g1" → "gone", "inf6" → "infsix"
+// "g1" -> "gone", "inf6" -> "infsix"
 function expandDigits(str) {
   return str.replace(/\d/g, d => DIGIT_WORDS[d])
 }
 
-// First letter of each space-separated word: "METANOIA WOLVES" → "mw"
+// First letter of each space-separated word: "METANOIA WOLVES" -> "mw"
 function wordInitials(str) {
   return str.trim().split(/[\s_]+/).filter(Boolean).map(w => w[0].toLowerCase()).join('')
 }
 
-// First letter of each CamelCase segment: "DashSkins" → "ds"
+// First letter of each CamelCase segment: "DashSkins" -> "ds"
 function camelInitials(str) {
   return str
     .replace(/([a-z])([A-Z])/g, '$1 $2')
@@ -33,12 +41,12 @@ export function matchScore(hint, teamName) {
   if (nh.length >= 2 && nt.includes(nh)) return 80
   if (nt.length >= 2 && nh.includes(nt)) return 75
 
-  // Initialism match: "mw" → "METANOIA WOLVES", "ds" → "DashSkins"
+  // Initialism match: "mw" -> "METANOIA WOLVES", "ds" -> "DashSkins"
   if (nh === wordInitials(teamName)) return 85
   if (nh === camelInitials(teamName)) return 85
 
-  // Split hint into letter prefix + digit word: "g1" → "g" prefix of name AND "one" in name
-  // Handles: "g1" → "GenOne", "ray5" → "Ray5ive", etc.
+  // Split hint into letter prefix + digit word: "g1" -> "g" prefix of name AND "one" in name
+  // Handles: "g1" -> "GenOne", "ray5" -> "Ray5ive", etc.
   const letterPrefix = nh.replace(/\d.*$/, '')       // "g" from "g1"
   const trailingDigits = nh.replace(/^[a-z]+/, '')   // "1" from "g1"
   if (letterPrefix && trailingDigits) {
@@ -46,7 +54,7 @@ export function matchScore(hint, teamName) {
     if (nt.startsWith(letterPrefix) && nt.includes(digitWord)) return 78
   }
 
-  // Hint without trailing digits as prefix: "inf6" → "inf" matches "infinite"
+  // Hint without trailing digits as prefix: "inf6" -> "inf" matches "infinite"
   const hintNoDigits = nh.replace(/\d+$/, '')
   if (hintNoDigits.length >= 3 && nt.startsWith(hintNoDigits)) return 65
 
