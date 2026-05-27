@@ -6,7 +6,7 @@ A tool for the UMA Protocol team to verify CS2 and Dota 2 match results using th
 
 ## What it does
 
-- Paste a Polymarket slug (e.g. `cs2-navi-faze-2026-04-02`) and the app finds the match on GRID.gg
+- Paste a Polymarket slug (e.g. `cs2-mis-pre-2026-04-02`) and the app finds the match on GRID.gg
 - Displays series score, winner, per-map/game breakdown, and player stats (K/D/A)
 - **CS2**: Total Rounds (Odd/Even), Total Kills (Odd/Even) per map
 - **Dota 2**: Polymarket market results per game — Ends in Daytime, Any Player Ultra Kill, Any Player Rampage, Both Teams Destroy Barracks, Both Teams Beat Roshan
