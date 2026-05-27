@@ -9,12 +9,14 @@ const TEAM_MATCH_THRESHOLD = 60
 
 export default function App() {
   const [input, setInput] = useState('')
+  const [team1Input, setTeam1Input] = useState('')
+  const [team2Input, setTeam2Input] = useState('')
   const [status, setStatus] = useState(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [candidates, setCandidates] = useState([])
   const [selectedSeries, setSelectedSeries] = useState(null)
   const [seriesState, setSeriesState] = useState(null)
-  const [foundTeam, setFoundTeam] = useState(null) // { teamName, date } for team search
+  const [foundTeam, setFoundTeam] = useState(null)
   const [loadingMsg, setLoadingMsg] = useState('Querying GRID.gg...')
 
   async function loadSeriesState(series) {
@@ -89,6 +91,10 @@ export default function App() {
       return
     }
 
+    // If full team names are provided, use them — much more reliable than slug abbreviations
+    const hint1 = team1Input.trim() || parsed.hint1
+    const hint2 = team2Input.trim() || parsed.hint2
+
     try {
       const result = await fetchSeriesByDate(parsed.date)
       const seriesList = result.edges.map(e => e.node)
@@ -99,20 +105,20 @@ export default function App() {
         return
       }
 
-      const best = findBestMatch(parsed.hint1, parsed.hint2, seriesList)
+      const best = findBestMatch(hint1, hint2, seriesList)
 
       if (best && best.score >= MATCH_THRESHOLD && best.bothMatched) {
         await loadSeriesState(best.series)
       } else {
         const all = seriesList.map(series => {
-          const m = findBestMatch(parsed.hint1, parsed.hint2, [series])
+          const m = findBestMatch(hint1, hint2, [series])
           return { series, score: m?.score ?? 0 }
         }).sort((a, b) => b.score - a.score)
 
         if (best && !best.bothMatched) {
           const matchedTeamName = best.hint1Matched ? best.hint1TeamName : best.hint2TeamName
-          const matchedHint = best.hint1Matched ? parsed.hint1 : parsed.hint2
-          const missedHint = best.hint1Matched ? parsed.hint2 : parsed.hint1
+          const matchedHint = best.hint1Matched ? hint1 : hint2
+          const missedHint = best.hint1Matched ? hint2 : hint1
           setErrorMsg(`Partial match: "${matchedHint}" → ${matchedTeamName} (found), but "${missedHint}" had no match for ${parsed.date}.`)
           setFoundTeam({ teamName: matchedTeamName, date: parsed.date })
         }
@@ -143,25 +149,52 @@ export default function App() {
 
         {/* Search form */}
         <form onSubmit={handleSearch} className="space-y-3">
-          <label className="block text-sm text-gray-400">Polymarket Slug</label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              placeholder="cs2-aab-inf6-2026-04-02"
-              className="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 text-sm font-mono"
-              disabled={status === 'loading'}
-            />
-            <button
-              type="submit"
-              disabled={status === 'loading' || !input.trim()}
-              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 rounded-lg text-sm font-semibold transition-colors"
-            >
-              {status === 'loading' ? 'Searching...' : 'Search'}
-            </button>
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Polymarket Slug</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                placeholder="cs2-aab-inf6-2026-04-02"
+                className="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 text-sm font-mono"
+                disabled={status === 'loading'}
+              />
+              <button
+                type="submit"
+                disabled={status === 'loading' || !input.trim()}
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 rounded-lg text-sm font-semibold transition-colors"
+              >
+                {status === 'loading' ? 'Searching...' : 'Search'}
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Copy the slug directly from the Polymarket URL</p>
           </div>
-          <p className="text-xs text-gray-500">Copy the slug directly from the Polymarket URL</p>
+
+          {/* Optional team name fields */}
+          <div>
+            <label className="block text-xs text-gray-500 mb-1.5">
+              Team names <span className="text-gray-600">(optional — greatly improves matching accuracy)</span>
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="text"
+                value={team1Input}
+                onChange={e => setTeam1Input(e.target.value)}
+                placeholder="e.g. AaB Esport"
+                className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 text-sm"
+                disabled={status === 'loading'}
+              />
+              <input
+                type="text"
+                value={team2Input}
+                onChange={e => setTeam2Input(e.target.value)}
+                placeholder="e.g. Infinite"
+                className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 text-sm"
+                disabled={status === 'loading'}
+              />
+            </div>
+          </div>
         </form>
 
         {/* Loading */}

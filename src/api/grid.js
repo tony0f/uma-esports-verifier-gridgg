@@ -56,6 +56,7 @@ const SERIES_STATE_QUERY = `
       started
       finished
       startedAt
+      valid
       format
       teams {
         id
@@ -115,7 +116,11 @@ async function fetchAllSeriesInRange(gte, lte) {
 }
 
 export async function fetchSeriesByDate(date) {
-  return fetchAllSeriesInRange(`${date}T00:00:00Z`, `${date}T23:59:59Z`)
+  // Extend to 06:00 next day to catch late-night matches that run past midnight UTC
+  const next = new Date(date + 'T00:00:00Z')
+  next.setUTCDate(next.getUTCDate() + 1)
+  const lte = next.toISOString().slice(0, 10) + 'T06:00:00Z'
+  return fetchAllSeriesInRange(`${date}T00:00:00Z`, lte)
 }
 
 export async function fetchSeriesByTeamNearDate(teamName, date, dayRadius = 7) {

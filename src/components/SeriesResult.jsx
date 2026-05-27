@@ -49,6 +49,17 @@ export default function SeriesResult({ series, state }) {
 
   return (
     <div className="mt-6 space-y-3">
+      {/* Data reliability warning */}
+      {state.valid === false && (
+        <div className="bg-orange-950 border border-orange-700 rounded-lg px-4 py-3 flex items-start gap-2">
+          <span className="text-orange-400 text-base leading-none mt-0.5">⚠️</span>
+          <p className="text-orange-300 text-sm">
+            <span className="font-semibold">GRID has flagged this data as potentially unreliable.</span>
+            {' '}There may have been an admin reset or technical issue. Verify results from an external source before resolving.
+          </p>
+        </div>
+      )}
+
       {/* Series header */}
       <div className="bg-gray-800 rounded-xl p-5 border border-gray-700">
         <div className="flex items-center justify-between mb-3">
